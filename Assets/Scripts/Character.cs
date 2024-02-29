@@ -14,8 +14,6 @@ public class Character : MonoBehaviour
     public float AnimationVelocitySpeedIdle = 11;
     public float AnimationVelocitySpeed = 2;
     [Space] public float JumpForce = 10;
-    public float JumpDuration = 2;
-    public AnimationCurve JumpCurve;
 
     public CharacterController CharacterController;
     public CameraController CameraController;
@@ -26,9 +24,8 @@ public class Character : MonoBehaviour
     private Vector2 LookInput;
     private Vector3 CurrentVelocity;
     private bool IsRunning;
-    private bool IsJumping;
     private float CurrentAnimationVelocity;
-    private IEnumerator CurrentJumpCoroutine;
+    private float CurrentGravity;
 
     // Start is called before the first frame update
     void Start()
@@ -40,10 +37,21 @@ public class Character : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        HandleGravity();
         HandleMovement();
         HandleRotation();
         HandleAnimation();
         CameraController.SetLookInput(LookInput);
+    }
+
+    void HandleGravity()
+    {
+        if (CharacterController.isGrounded && CurrentGravity < 0)
+        {
+            CurrentGravity = -1;
+        }
+
+        CurrentGravity += Gravity * Time.deltaTime;
     }
 
     void HandleMovement()
@@ -55,7 +63,7 @@ public class Character : MonoBehaviour
         CurrentVelocity = Vector3.Lerp(CurrentVelocity, desiredMotion, Time.deltaTime * transitionSpeed);
         
         Vector3 finalMotion = CurrentVelocity;
-        finalMotion.y = IsJumping ? 0 : Gravity;
+        finalMotion.y = CurrentGravity;
         CharacterController.Move(finalMotion * Time.deltaTime);
     }
 
@@ -129,28 +137,12 @@ public class Character : MonoBehaviour
 
     private void StartJump()
     {
-        if(CurrentJumpCoroutine != null)
+        if(CharacterController.isGrounded == false)
         {
-            StopCoroutine(CurrentJumpCoroutine);
+            return;
         }
 
-        CurrentJumpCoroutine = JumpCoroutine();
-        StartCoroutine(CurrentJumpCoroutine);
+        CurrentGravity += JumpForce;
     }
-
-    private IEnumerator JumpCoroutine()
-    {
-        IsJumping = true;
-        float normalizedTime = 0;
-        while (normalizedTime < 1)
-        {
-            normalizedTime += Time.deltaTime / JumpDuration;
-            float CurrentJumpForce = JumpCurve.Evaluate(normalizedTime) * JumpForce;
-            CharacterController.Move(Vector3.up * CurrentJumpForce * Time.deltaTime);
-            yield return null;
-        }
-        IsJumping = false;
-    }
-
 
 }

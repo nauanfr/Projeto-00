@@ -13,6 +13,9 @@ public class Character : MonoBehaviour
     public float Deceleration = 2;
     public float AnimationVelocitySpeedIdle = 11;
     public float AnimationVelocitySpeed = 2;
+    [Space] public float JumpForce = 10;
+    public float JumpDuration = 2;
+    public AnimationCurve JumpCurve;
 
     public CharacterController CharacterController;
     public CameraController CameraController;
@@ -23,7 +26,9 @@ public class Character : MonoBehaviour
     private Vector2 LookInput;
     private Vector3 CurrentVelocity;
     private bool IsRunning;
+    private bool IsJumping;
     private float CurrentAnimationVelocity;
+    private IEnumerator CurrentJumpCoroutine;
 
     // Start is called before the first frame update
     void Start()
@@ -50,7 +55,7 @@ public class Character : MonoBehaviour
         CurrentVelocity = Vector3.Lerp(CurrentVelocity, desiredMotion, Time.deltaTime * transitionSpeed);
         
         Vector3 finalMotion = CurrentVelocity;
-        finalMotion.y = Gravity;
+        finalMotion.y = IsJumping ? 0 : Gravity;
         CharacterController.Move(finalMotion * Time.deltaTime);
     }
 
@@ -99,6 +104,11 @@ public class Character : MonoBehaviour
         IsRunning = !IsRunning;
     }
 
+    void OnJump(InputValue value)
+    {
+        StartJump();
+    }
+
     Vector3 ConvertInputToDirection()
     {
         if (MoveInput == Vector2.zero)
@@ -116,4 +126,31 @@ public class Character : MonoBehaviour
     {
         return Mathf.Atan2(CurrentVelocity.x, CurrentVelocity.z) * Mathf.Rad2Deg;
     }
+
+    private void StartJump()
+    {
+        if(CurrentJumpCoroutine != null)
+        {
+            StopCoroutine(CurrentJumpCoroutine);
+        }
+
+        CurrentJumpCoroutine = JumpCoroutine();
+        StartCoroutine(CurrentJumpCoroutine);
+    }
+
+    private IEnumerator JumpCoroutine()
+    {
+        IsJumping = true;
+        float normalizedTime = 0;
+        while (normalizedTime < 1)
+        {
+            normalizedTime += Time.deltaTime / JumpDuration;
+            float CurrentJumpForce = JumpCurve.Evaluate(normalizedTime) * JumpForce;
+            CharacterController.Move(Vector3.up * CurrentJumpForce * Time.deltaTime);
+            yield return null;
+        }
+        IsJumping = false;
+    }
+
+
 }

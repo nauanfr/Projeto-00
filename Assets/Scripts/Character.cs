@@ -93,6 +93,7 @@ public class Character : MonoBehaviour
         CurrentAnimationVelocity = Mathf.Lerp(CurrentAnimationVelocity, desiredVelocity, Time.deltaTime * desiredTransitionSpeed);
         
         Animator.SetFloat("Velocity", CurrentAnimationVelocity);
+        Animator.SetBool("IsGrounded", CharacterController.isGrounded);
     }
 
     void OnMove(InputValue value)
@@ -143,6 +144,8 @@ public class Character : MonoBehaviour
         }
 
         CurrentGravity += JumpForce;
+
+        Animator.Play("Jump Idle Start");
     }
 
 }

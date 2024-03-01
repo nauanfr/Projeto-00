@@ -129,8 +129,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Gravity: -9
   RotationSpeed: 5
-  VelocityWalk: 2.5
-  VelocityRunning: 5
+  VelocityWalk: 3
+  VelocityRunning: 6
   Acceleration: 2
   Deceleration: 3
   AnimationVelocitySpeedIdle: 4

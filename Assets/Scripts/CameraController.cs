@@ -24,6 +24,14 @@ public class CameraController : MonoBehaviour
 
     #endregion
 
+    private void Start()
+    {
+        if(cameraTransform is not null)
+        {
+            cameraTransform.SetParent(null);
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {

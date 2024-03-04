@@ -5,15 +5,19 @@ using UnityEngine.InputSystem;
 
 public class Character : MonoBehaviour
 {
-    public float Gravity;
-    public float RotationSpeed;
-    [Space]public float VelocityWalk = 2.5f;
-    public float VelocityRunning = 5;
+    public float Gravity = -9;
+    public float GroundRadius = 0.25f;
+    public float GroundDetectionThresHold = 1.2f;
+    public float GroundDetectionThresHoldInAir = 0.75f;
+    public LayerMask GroundLayer;
+    public float RotationSpeed = 5;
+    [Space]public float VelocityWalk = 3;
+    public float VelocityRunning = 6;
     public float Acceleration = 2;
-    public float Deceleration = 2;
-    public float AnimationVelocitySpeedIdle = 11;
+    public float Deceleration = 3;
+    public float AnimationVelocitySpeedIdle = 4;
     public float AnimationVelocitySpeed = 2;
-    [Space] public float JumpForce = 10;
+    [Space] public float JumpForce = 5;
 
     public CharacterController CharacterController;
     public CameraController CameraController;
@@ -24,6 +28,7 @@ public class Character : MonoBehaviour
     private Vector2 LookInput;
     private Vector3 CurrentVelocity;
     private bool IsRunning;
+    private bool IsGrounded;
     private float CurrentAnimationVelocity;
     private float CurrentGravity;
 
@@ -46,7 +51,9 @@ public class Character : MonoBehaviour
 
     void HandleGravity()
     {
-        if (CharacterController.isGrounded && CurrentGravity < 0)
+        HandleGroundDetection();
+        
+        if (GetIsGrounded() && CurrentGravity < 0)
         {
             CurrentGravity = -1;
         }
@@ -93,7 +100,7 @@ public class Character : MonoBehaviour
         CurrentAnimationVelocity = Mathf.Lerp(CurrentAnimationVelocity, desiredVelocity, Time.deltaTime * desiredTransitionSpeed);
         
         Animator.SetFloat("Velocity", CurrentAnimationVelocity);
-        Animator.SetBool("IsGrounded", CharacterController.isGrounded);
+        Animator.SetBool("IsGrounded", GetIsGrounded());
     }
 
     void OnMove(InputValue value)
@@ -138,7 +145,7 @@ public class Character : MonoBehaviour
 
     private void StartJump()
     {
-        if(CharacterController.isGrounded == false)
+        if(GetIsGrounded() == false)
         {
             return;
         }
@@ -148,4 +155,25 @@ public class Character : MonoBehaviour
         Animator.Play("Jump Idle Start");
     }
 
+    private void HandleGroundDetection()
+    {
+        float Distance = IsGrounded ? GroundDetectionThresHold : GroundDetectionThresHoldInAir;
+
+        var groundCast = Physics.SphereCast(transform.position + Vector3.up, GroundRadius, Vector3.down,out var hitInfo, Distance, GroundLayer);
+
+        IsGrounded = hitInfo.collider && CurrentGravity < 0;
+    }
+
+    private void OnDrawGizmos()
+    {
+        float Distance = IsGrounded ? GroundDetectionThresHold : GroundDetectionThresHoldInAir;
+
+        Gizmos.DrawSphere(transform.position + Vector3.up, GroundRadius);
+        Gizmos.DrawSphere(transform.position + Vector3.up * Distance, GroundRadius);
+    }
+
+    private bool GetIsGrounded()
+    {
+        return IsGrounded;
+    }
 }
